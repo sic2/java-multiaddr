@@ -1,12 +1,18 @@
 package io.ipfs.api;
 
-import io.ipfs.multiaddr.*;
-import org.junit.*;
+import io.ipfs.multiaddr.MultiAddress;
+import org.junit.Test;
 
-import java.io.*;
-import java.util.*;
-import java.util.function.*;
-import java.util.stream.*;
+import java.io.ByteArrayOutputStream;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static junit.framework.TestCase.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class MultiAddressTest {
 
@@ -150,7 +156,37 @@ public class MultiAddressTest {
         test.accept("/ip4/127.0.0.1/udp/1234/ip4/127.0.0.1/tcp/4321", "047f0000011104d2047f0000010610e1");
     }
 
-    public static byte[] fromHex(String hex) {
+    @Test
+    public void ip4_udp_MultiAddressTest() {
+        MultiAddress multiAddress = new MultiAddress("/ip4/127.0.0.1/udp/1234");
+
+        assertEquals("127.0.0.1", multiAddress.getHost());
+        assertFalse(multiAddress.isTCPIP());
+    }
+
+    @Test
+    public void ip4_tcp_MultiAddressTest() {
+        MultiAddress multiAddress = new MultiAddress("/ip4/127.0.0.1/tcp/1234");
+
+        assertEquals("127.0.0.1", multiAddress.getHost());
+        assertTrue(multiAddress.isTCPIP());
+        assertEquals(1234, multiAddress.getTCPPort());
+    }
+
+    @Test (expected = IllegalStateException.class)
+    public void noHostMultiAddressTest() {
+        MultiAddress multiAddress = new MultiAddress("/tcp/1234");
+        multiAddress.getHost();
+    }
+
+    @Test (expected = IllegalStateException.class)
+    public void tcpMultiAddressWithNoPortTest() {
+        MultiAddress multiAddress = new MultiAddress("/ip4/127.0.0.1/udp/1234");
+        assertFalse(multiAddress.isTCPIP());
+        multiAddress.getTCPPort();
+    }
+
+    private static byte[] fromHex(String hex) {
         if (hex.length() % 2 != 0)
             throw new IllegalStateException("Uneven number of hex digits!");
         ByteArrayOutputStream bout = new ByteArrayOutputStream();

@@ -1,10 +1,14 @@
 package io.ipfs.multiaddr;
 
-import io.ipfs.multihash.Multihash;
 import io.ipfs.cid.Cid;
+import io.ipfs.multibase.Multibase;
+import io.ipfs.multihash.Multihash;
+
 import java.io.*;
-import java.net.*;
-import java.util.*;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Protocol {
     public static int LENGTH_PREFIXED_VAR_SIZE = -1;
@@ -110,7 +114,7 @@ public class Protocol {
                     if (split[0].length() != 16)
                         throw new IllegalStateException("failed to parse " + name() + " addr: " + addr + " not a Tor onion address.");
 
-                    byte[] onionHostBytes = Base32.decode(split[0].toUpperCase());
+                    byte[] onionHostBytes = Multibase.Base32.decode(split[0].toUpperCase());
                     int port = Integer.parseInt(split[1]);
                     if (port > 65535)
                         throw new IllegalStateException("Port is > 65535: " + port);
@@ -170,7 +174,7 @@ public class Protocol {
                 byte[] host = new byte[10];
                 read(in, host);
                 String port = Integer.toString((in.read() << 8) | (in.read()));
-                return Base32.encode(host)+":"+port;
+                return Multibase.Base32.encode(host)+":"+port;
             case UNIX:
                 buf = new byte[sizeForAddress];
                 read(in, buf);

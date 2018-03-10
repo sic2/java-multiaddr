@@ -1,10 +1,10 @@
 package io.ipfs.multiaddr;
 
-import io.ipfs.multihash.*;
+import io.ipfs.multihash.Multihash;
 
 import java.io.*;
-import java.util.*;
-import java.util.stream.*;
+import java.util.Arrays;
+import java.util.stream.Stream;
 
 public class MultiAddress
 {
@@ -29,19 +29,14 @@ public class MultiAddress
 
     public boolean isTCPIP() {
         String[] parts = toString().substring(1).split("/");
-        if (parts.length != 4)
-            return false;
-        if (!parts[0].startsWith("ip"))
-            return false;
-        if (!parts[2].equals("tcp"))
-            return false;
-        return true;
+        return parts.length == 4 && parts[0].startsWith("ip") && parts[2].equals("tcp");
     }
 
     public String getHost() {
         String[] parts = toString().substring(1).split("/");
         if (parts[0].startsWith("ip"))
             return parts[1];
+
         throw new IllegalStateException("This multiaddress doesn't have a host: "+toString());
     }
 
@@ -49,6 +44,7 @@ public class MultiAddress
         String[] parts = toString().substring(1).split("/");
         if (parts[2].startsWith("tcp"))
             return Integer.parseInt(parts[3]);
+
         throw new IllegalStateException("This multiaddress doesn't have a tcp port: "+toString());
     }
 
@@ -59,8 +55,7 @@ public class MultiAddress
         if (parts[0].length() != 0)
             throw new IllegalStateException("MultiAddress must start with a /");
 
-        ByteArrayOutputStream bout = new ByteArrayOutputStream();
-        try {
+        try (ByteArrayOutputStream bout = new ByteArrayOutputStream()){
             for (int i = 1; i < parts.length;) {
                 String part = parts[i++];
                 Protocol p = Protocol.get(part);
@@ -86,8 +81,8 @@ public class MultiAddress
 
     private static String encodeToString(byte[] raw) {
         StringBuilder b = new StringBuilder();
-        InputStream in = new ByteArrayInputStream(raw);
-        try {
+
+        try (InputStream in = new ByteArrayInputStream(raw)){
             while (true) {
                 int code = (int)Protocol.readVarint(in);
                 Protocol p = Protocol.get(code);
